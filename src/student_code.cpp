@@ -27,7 +27,15 @@ namespace CGL
     // Evaluate the Bezier surface at parameters (u, v) through 2D de Casteljau subdivision.
     // (i.e. Unlike Part 1 where we performed one subdivision level per call to evaluateStep, this function
     // should apply de Casteljau's algorithm until it computes the final, evaluated point on the surface)
-    return Vector3D();
+
+    size_t n = controlPoints.size();
+    std::vector<Vector3D> vPoints;
+
+    for (size_t i = 0; i < n; i++) {
+      vPoints.push_back(evaluate1D(controlPoints[i], u));
+    }
+
+    return evaluate1D(vPoints, v);
   }
 
   Vector3D BezierPatch::evaluate1D(std::vector<Vector3D> points, double t) const
@@ -35,7 +43,15 @@ namespace CGL
     // TODO Part 2.
     // Optional helper function that you might find useful to implement as an abstraction when implementing BezierPatch::evaluate.
     // Given an array of 4 points that lie on a single curve, evaluates the Bezier curve at parameter t using 1D de Casteljau subdivision.
-    return Vector3D();
+
+    size_t n = points.size();
+    for (size_t i = 1; i < n; i++) {
+      for (size_t j = 0; j < n - i; j++) {
+        points[j] = points[j] * t + points[j + 1] * (1 - t);
+      }
+    }
+
+    return points[0];
  }
 
 
