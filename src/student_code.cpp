@@ -10,6 +10,13 @@ namespace CGL
     // TODO Part 1.
     // Perform one step of the Bezier curve's evaluation at t using de Casteljau's algorithm for subdivision.
     // Store all of the intermediate control points into the 2D vector evaluatedLevels.
+
+    size_t level = evaluatedLevels.size();
+    evaluatedLevels.push_back({});
+    for (size_t i = 0; i < numControlPoints - level; i++) {
+      evaluatedLevels[level].push_back(t * evaluatedLevels[level - 1][i] + (1 - t) * evaluatedLevels[level - 1][i + 1]);
+    }
+
     return;
   }
 
