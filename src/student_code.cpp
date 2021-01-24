@@ -112,7 +112,7 @@ namespace CGL
 
     f0->halfedge() = h0;
     f1->halfedge() = h3;
-    
+
     return e0;
   }
 
@@ -121,7 +121,67 @@ namespace CGL
     // TODO Part 5.
     // TODO This method should split the given edge and return an iterator to the newly inserted vertex.
     // TODO The halfedge of this vertex should point along the edge that was split, rather than the new edges.
-    return newVertex();
+    
+    if (e0->isBoundary()) {
+      return e0->halfedge()->vertex();
+    }
+
+    auto h0 = e0->halfedge();
+    auto h1 = h0->next();
+    auto h2 = h1->next();
+    auto h3 = h0->twin();
+    auto h4 = h3->next();
+    auto h5 = h4->next();
+
+    auto v0 = h0->vertex();
+    auto v1 = h3->vertex();
+    auto v2 = h2->vertex();
+    auto v3 = h5->vertex();
+
+    auto f0 = h0->face();
+    auto f1 = h3->face();
+
+    auto v4 = newVertex();
+    auto e1 = newEdge();
+    auto e2 = newEdge();
+    auto e3 = newEdge();
+    auto f2 = newFace();
+    auto f3 = newFace();
+
+    auto h6 = newHalfedge();
+    auto h7 = newHalfedge();
+    auto h8 = newHalfedge();
+    auto h9 = newHalfedge();
+    auto h10 = newHalfedge();
+    auto h11 = newHalfedge();
+
+    h0->setNeighbors(h7, h9, v0, e0, f0);
+    h1->setNeighbors(h8, h1->twin(), h1->vertex(), h1->edge(), f2);
+    h2->setNeighbors(h0, h2->twin(), h2->vertex(), h2->edge(), f0);
+    h3->setNeighbors(h10, h6, v1, e1, f1);
+    h4->setNeighbors(h11, h4->twin(), h4->vertex(), h4->edge(), f3);
+    h5->setNeighbors(h3, h5->twin(), h5->vertex(), h5->edge(), f1);
+    h6->setNeighbors(h1, h3, v4, e1, f2);
+    h7->setNeighbors(h2, h8, v4, e2, f0);
+    h8->setNeighbors(h6, h7, v2, e2, f2);
+    h9->setNeighbors(h4, h0, v4, e0, f3);
+    h10->setNeighbors(h5, h11, v4, e3, f1);
+    h11->setNeighbors(h9, h10, v3, e3, f3);
+
+    v4->halfedge() = h6;
+
+    e1->halfedge() = h6;
+    e2->halfedge() = h7;
+    e3->halfedge() = h10;
+
+    f0->halfedge() = h0;
+    f1->halfedge() = h3;
+    f2->halfedge() = h1;
+    f3->halfedge() = h4;
+
+    v4->position = (v0->position + v1->position) * 0.5;
+    
+    return v4;
   }
 
 
