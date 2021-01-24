@@ -62,7 +62,16 @@ namespace CGL
     // TODO Returns an approximate unit normal at this vertex, computed by
     // TODO taking the area-weighted average of the normals of neighboring
     // TODO triangles, then normalizing.
-    return Vector3D();
+
+    Vector3D N;
+    auto h = halfedge();
+
+    do {
+      N += h->face()->normal();
+      h = h->twin()->next();
+    }while (h != halfedge());
+
+    return N.unit();
   }
 
   EdgeIter HalfedgeMesh::flipEdge( EdgeIter e0 )
