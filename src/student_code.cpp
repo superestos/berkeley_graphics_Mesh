@@ -69,7 +69,7 @@ namespace CGL
     do {
       N += h->face()->normal();
       h = h->twin()->next();
-    }while (h != halfedge());
+    } while (h != halfedge());
 
     return N.unit();
   }
@@ -180,7 +180,7 @@ namespace CGL
     f3->halfedge() = h4;
 
     v4->position = (v0->position + v1->position) * 0.5;
-    
+
     return v4;
   }
 
@@ -200,10 +200,25 @@ namespace CGL
     // TODO Compute new positions for all the vertices in the input mesh, using the Loop subdivision rule,
     // TODO and store them in Vertex::newPosition. At this point, we also want to mark each vertex as being
     // TODO a vertex of the original mesh.
-
+    for (auto v = mesh.verticesBegin(); v != mesh.verticesEnd(); ++v) {
+      double u = v->degree() == 3? 3.0 / 16.0: 3.0 / (8.0 * (double)v->degree());
+      v->newPosition = (1 - (double)v->degree() * u) * v->position;
+      v->isNew = false;
+      
+      auto h = v->halfedge();
+      do {
+        v->newPosition += u * h->next()->vertex()->position;
+        h = h->twin()->next();
+      } while (h != v->halfedge());
+    }    
 
     // TODO Next, compute the updated vertex positions associated with edges, and store it in Edge::newPosition.
-
+    for (auto e = mesh.edgesBegin(); e != mesh.edgesEnd(); ++e) {
+      auto h = e->halfedge();
+      e->newPosition = 3.0 / 8.0 * (h->vertex()->position + h->twin()->vertex()->position);
+      e->newPosition += 1.0 / 8.0 * (h->next()->next()->vertex()->position + h->twin()->next()->next()->vertex()->position);
+      e->isNew = false;
+    }
 
     // TODO Next, we're going to split every edge in the mesh, in any order.  For future
     // TODO reference, we're also going to store some information about which subdivided
@@ -211,12 +226,33 @@ namespace CGL
     // TODO by setting the flat Edge::isNew.  Note that in this loop, we only want to iterate
     // TODO over edges of the original mesh---otherwise, we'll end up splitting edges that we
     // TODO just split (and the loop will never end!)
+    for (auto e = mesh.edgesBegin(); e != mesh.edgesEnd(); ++e) {
+      if (!e->halfedge()->vertex()->isNew && !e->halfedge()->twin()->vertex()->isNew && !e->isBoundary()) {
+        auto h1 = e->halfedge();
+        auto h2 = e->halfedge()->twin();
 
+        auto mid = mesh.splitEdge(e);
+        mid->newPosition = e->newPosition;
+        mid->isNew = true;
+
+        h1->next()->edge()->isNew = true;
+        h2->next()->edge()->isNew = true;
+      }
+    }
 
     // TODO Now flip any new edge that connects an old and new vertex.
-
-
+    for (auto h = mesh.halfedgesBegin(); h != mesh.halfedgesEnd(); h++) {
+      if (!h->vertex()->isNew && h->next()->vertex()->isNew && h->edge()->isNew) {
+        h->edge()->isNew = false;
+        mesh.flipEdge(h->edge());
+      }
+    }
+    
     // TODO Finally, copy the new vertex positions into final Vertex::position.
+    for (auto v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
+      v->isNew = false;
+      v->position = v->newPosition;
+    }
 
     return;
   }
